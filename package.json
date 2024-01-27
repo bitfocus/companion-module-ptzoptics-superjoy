@@ -12,8 +12,7 @@
 	},
 	"license": "MIT",
 	"dependencies": {
-		"@companion-module/base": "~1.4.1",
-		"webpack": "^5.90.0"
+		"@companion-module/base": "~1.4.1"
 	},
 	"devDependencies": {
 		"@companion-module/tools": "^1.2.0"
