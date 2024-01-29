@@ -39,6 +39,25 @@ export const FIELDS = {
     useVaribles: true,
   },
   
+  CameraCount: {
+    type: 'number',
+    label: 'Camera Count',
+    id: 'cameracount',
+    default: 4,
+    min: 1,
+    max: 64,
+    useVariables: true,
+  },
+  
+  PresetCount: {
+    type: 'number',
+    label: 'Preset Count',
+    id: 'presetcount',
+    default: 8,
+    min: 1,
+    max: 64,
+  },
+  
 /*
 	PollInterval: {
 		type: 'number',

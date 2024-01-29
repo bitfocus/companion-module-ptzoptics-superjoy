@@ -9,3 +9,10 @@ This module uses the http CGI interface on the SuperJoy controller to enable con
 * Selected camera feedback (caches last known state)
 * Selected preset per-camera (caches last known state)
 * HDMI on / off and relative presets not yet implemented
+
+**Configuration Instructions**
+
+* Enter the controller's IP or hostname.
+* Enter the camera group number in the group field.  Currently, only one group per instance is supported.
+* Choose from camera + preset button combinations, camera select only presets, or build your own.
+* The number of camera and number of preset fields will determine the number of preset buttons generated.

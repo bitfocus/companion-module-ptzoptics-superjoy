@@ -13,18 +13,18 @@ import {
 import {
   FIELDS
 } from './fields.js'
-//import { presets } from './presets.js'
+import { initPresets } from './presets.js'
 
 class PTZSuperjoyInstance extends InstanceBase {
   selectedCam = 0;
   selectedPreset = new Map();
-
 
   configUpdated(config) {
     this.config = config
     this.updateCamStatus()
     this.initActions()
     this.initFeedbacks()
+    this.setPresetDefinitions(initPresets(this.config.cameracount,this.config.presetcount))
   }
 
   init(config) {
@@ -33,7 +33,7 @@ class PTZSuperjoyInstance extends InstanceBase {
     this.updateStatus(InstanceStatus.Ok)
     this.initActions()
     this.initFeedbacks()
-    this.setPresetDefinitions(this.initPresets())
+    this.setPresetDefinitions(initPresets(this.config.cameracount,this.config.presetcount))
   }
 
   // Return config fields for web config
@@ -191,7 +191,7 @@ class PTZSuperjoyInstance extends InstanceBase {
     }
   }
 
-
+/*
   initPresets() {
     const presets = {}
     this.log('info', 'Adding presets')
@@ -290,6 +290,7 @@ class PTZSuperjoyInstance extends InstanceBase {
     }
     return presets
   }
+  */
 }
 
 runEntrypoint(PTZSuperjoyInstance, upgradeScripts)

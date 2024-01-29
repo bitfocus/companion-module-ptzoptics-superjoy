@@ -10,7 +10,7 @@ export const configFields = [
 		type: 'dropdown',
 		id: 'group',
 		label: 'Camera Group',
-		width: 6,
+		width: 4,
 		default: 1,
 		choices: [
 			{ id: 1, label: 'Group 1' },
@@ -20,4 +20,18 @@ export const configFields = [
       { id: 5, label: 'Group 5' },
 		],
 	},
+  {
+    type: 'textinput',
+    id: 'cameracount',
+    label: 'Number of Cameras',
+    width: 4,
+    default: 4,
+  },
+  {
+    type: 'textinput',
+    id: 'presetcount',
+    label: 'Number of Presets',
+    width: 4,
+    default: 8,
+  },
 ]
