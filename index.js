@@ -63,7 +63,7 @@ class PTZSuperjoyInstance extends InstanceBase {
             fetch(url)
               .then(response => response.json())
               .then(text => {
-                if (text && text.response === 0) {
+                if (text && text.result == 0) {
                   this.log('debug', 'Result was OK')
                   this.updateStatus(InstanceStatus.Ok)
                   this.selectedCam = action.options.id
@@ -90,8 +90,8 @@ class PTZSuperjoyInstance extends InstanceBase {
             fetch(url)
               .then(response => response.json())
               .then(text => {
-                this.log('info', text)
-                if (text && text.response === 0) {
+                this.log('info', JSON.stringify(text))
+                if (text && text.result == 0) {
                   this.log('debug', 'Result was OK')
                   this.updateStatus(InstanceStatus.Ok)
                   this.selectedCam = action.options.id
