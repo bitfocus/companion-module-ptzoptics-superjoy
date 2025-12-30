@@ -43,7 +43,7 @@ export const FIELDS = {
     type: 'number',
     label: 'Camera Count',
     id: 'cameracount',
-    default: 4,
+    default: 7,
     min: 1,
     max: 64,
     useVariables: true,

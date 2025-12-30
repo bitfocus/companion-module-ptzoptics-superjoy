@@ -13,27 +13,57 @@ import {
 import {
   FIELDS
 } from './fields.js'
+import { 
+  PTZSuperjoyVariables
+} from './variables.js'
 import { initPresets } from './presets.js'
 
 class PTZSuperjoyInstance extends InstanceBase {
   selectedCam = 0;
   selectedPreset = new Map();
 
-  configUpdated(config) {
+  initOrUpdateConfig(config, msg) {
+    this.log('debug', `initOrUpdateConfig - config: ${JSON.stringify(config)}`)
+    this.updateStatus(InstanceStatus.Connecting, msg)
     this.config = config
-    this.updateCamStatus()
+    this.pollStatusTimer = null
+    this.variables = new PTZSuperjoyVariables(this)
+
     this.initActions()
     this.initFeedbacks()
     this.setPresetDefinitions(initPresets(this.config.cameracount,this.config.presetcount))
+
+    if (this.config.controller !== undefined) {
+      // This will set InstanceStatus.Ok if connection is made.
+      this.updateCamStatus()
+    } else {
+      this.log('error', 'Please configure the controller ip address or host')
+    }
+  }
+
+  configUpdated(config) {
+    this.initOrUpdateConfig(config, 'configUpdated')
   }
 
   init(config) {
-    this.config = config
+    this.initOrUpdateConfig(config, 'init')
+    // Start polling after construction of all objects
+    // this.startPolling()
+  }
+  
+  pollStatus() {
     this.updateCamStatus()
-    this.updateStatus(InstanceStatus.Ok)
-    this.initActions()
-    this.initFeedbacks()
-    this.setPresetDefinitions(initPresets(this.config.cameracount,this.config.presetcount))
+  }
+
+  startPollingStatus() {
+    this.stopPollingStatus()
+    this.pollStatus()
+    this.pollingStatusTimer = setInterval(this.pollStatus.bind(this), 1000)
+  }
+
+  stopPollingStatus() {
+    clearInterval(this.pollingStatusTimer)
+    this.pollingStatusTimer = null
   }
 
   // Return config fields for web config
@@ -43,9 +73,9 @@ class PTZSuperjoyInstance extends InstanceBase {
 
   // When module gets deleted
   async destroy() {
-    // Stop any running feedback timers
-    for (const timer of Object.values(this.feedbackTimers)) {
-      clearInterval(timer)
+    // Stop the polling timer
+    if (this.pollingTimer !== undefined) {
+      clearInterval(this.pollingTimer)
     }
   }
 
@@ -114,8 +144,6 @@ class PTZSuperjoyInstance extends InstanceBase {
     })
   }
 
-  feedbackTimers = {}
-
   initFeedbacks() {
     this.setFeedbackDefinitions({
       camIsSelected: {
@@ -125,7 +153,7 @@ class PTZSuperjoyInstance extends InstanceBase {
         subscribe: (feedback) => {},
         unsubscribe: (feedback) => {},
         callback: (feedback) => {
-          this.log('debug', `Received selected cam feedback request for ${feedback.id} - ${feedback.options.id} - current selection is ${this.selectedCam}`)
+          this.log('debug', `Received selected cam feedback request for ${feedback.id} - ${feedback.options.id} - current selection s ${this.selectedCam}`)
           if (this.selectedCam == feedback.options.id) {
             return true
           }
@@ -166,7 +194,7 @@ class PTZSuperjoyInstance extends InstanceBase {
 
     //    this.updateCamStatus(1)
   }
-
+  
   updateCamStatus() {
     if (this.config.controller === '') {
       this.log('error', 'Controller address not configured!')
@@ -174,21 +202,32 @@ class PTZSuperjoyInstance extends InstanceBase {
     }
     let url = `http://${this.config.controller}/cgi-bin/joyctrl.cgi?f=inquiry&action=status`
     this.log('debug', `Fetching current state`)
-    try {
       fetch(url)
-        .then(response => response.json())
         .then(response => {
-          if (response.group === this.config.group) {
+          if (response.status == 200) {
+            this.updateStatus(InstanceStatus.Ok)
+            return response.json()
+          }
+          this.log('error', `Fetching cam status returned unexpected status=${response.status} (expected 200)`)
+          return null
+        })
+        .then(response => {
+          this.log('debug', `processing response ${JSON.stringify(response)}`)
+          if (response && response.group === this.config.group) {
             this.log('info', `Status query says current selected camera is ${response.camid} preset ${response.preset}`)
             this.selectedCam = response.camid
             this.selectedPreset[response.camid] = response.preset
             this.checkFeedbacks()
           }
+          this.log('debug', `calling update ${JSON.stringify(response)}`)
+          this.variables.updateVariables(response)
+          this.log('debug', `after update ${JSON.stringify(response)}`)
+          return null
         })
-    } catch (e) {
-      this.log('error', `HTTP GET Request failed`)
-      this.updateStatus(InstanceStatus.UnknownError, e.code)
-    }
+        .catch ((e) => {
+          this.log('error', `HTTP GET Request failed, please check 'Controller IP or Host' in the emodule configuration`)
+          this.updateStatus(InstanceStatus.UnknownError, e.code)
+        })
   }
 
 /*

@@ -25,7 +25,7 @@ export const configFields = [
     id: 'cameracount',
     label: 'Number of Cameras',
     width: 4,
-    default: 4,
+    default: 5,
   },
   {
     type: 'textinput',
