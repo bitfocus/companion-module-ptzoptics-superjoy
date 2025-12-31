@@ -1,33 +1,52 @@
-const { combineRgb } = require('@companion-module/base')
+// const { combineRgb } = require('@companion-module/base')
+/*
+initFeedbacks() {
+    this.setFeedbackDefinitions({
+      camIsSelected: {
+        type: 'boolean',
+        name: 'Is Camera Selected',
+        options: [FIELDS.Camera],
+        subscribe: (feedback) => {},
+        unsubscribe: (feedback) => {},
+        callback: (feedback) => {
+          this.log('debug', `Received selected cam feedback request for ${feedback.id} - ${feedback.options.id} - current selection s ${this.selectedCam}`)
+          if (this.variables.getVariable['camid'] == feedback.options.id) {
+            return true
+          }
+          return false
+        },
+      },
+      camIsPreset: {
+        type: 'boolean',
+        name: 'Is Preset Selected',
+        options: [FIELDS.Camera, FIELDS.Preset],
+        subscribe: (feedback) => {},
+        unsubscribe: (feedback) => {},
+        callback: (feedback) => {
+          //          this.log('info',`Received preset feedback request for ${feedback.id} - ${feedback.options.id}`)
+          if (this.variables.getVariable('camid') == feedback.options.id) {
+            return true
+          }
+          return false
+        },
+      },
+      camIsPresetAndSelected: {
+        type: 'boolean',
+        name: 'Is Camera and Preset Selected',
+        options: [FIELDS.Camera, FIELDS.Preset],
+        subscribe: (feedback) => {},
+        unsubscribe: (feedback) => {},
+        callback: (feedback) => {
+          //          this.log('info',`Received preset feedback request for ${feedback.id} - ${feedback.options.id}`)
+          if (this.variables.getVariable('camid') == feedback.options.id && this.selectedPreset[feedback.options.id] == feedback.options.preset) {
+            return true
+          }
+          return false
+        },
+      },
 
-module.exports = async function (self) {
-	self.setFeedbackDefinitions({
-		ChannelState: {
-			name: 'Example Feedback',
-			type: 'boolean',
-			label: 'Channel State',
-			defaultStyle: {
-				bgcolor: combineRgb(255, 0, 0),
-				color: combineRgb(0, 0, 0),
-			},
-			options: [
-				{
-					id: 'num',
-					type: 'number',
-					label: 'Test',
-					default: 5,
-					min: 0,
-					max: 10,
-				},
-			],
-			callback: (feedback) => {
-				console.log('Hello world!', feedback.options.num)
-				if (feedback.options.num > 5) {
-					return true
-				} else {
-					return false
-				}
-			},
-		},
-	})
-}
+    })
+    this.log('debug', `Done setting feedback definitions - selected cam is stored as ${this.selectedCam}`)
+
+    //    this.updateCamStatus(1)
+  }*/
