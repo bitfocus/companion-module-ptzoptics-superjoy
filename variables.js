@@ -18,21 +18,21 @@ const VARIABLES = [
 	},
 ]
 
-export class PTZSuperjoyVariables {
-	constructor (superjoyInstance) {
-		// superjoyIntance is the main class inherited from CompanionBase
-		this.superjoyInstance = superjoyInstance
+export class PTZSuperJoyVariables {
+	constructor (superJoyInstance) {
+		// superJoyIntance is the main class inherited from CompanionBase
+		this.superJoyInstance = superJoyInstance
 		// valueCache holds all the current values of variables
 		this.valueCache = {}
 		this.initVariables()
 	}
    
 	initVariables() {
-		this.superjoyInstance.setVariableDefinitions(VARIABLES)
+		this.superJoyInstance.setVariableDefinitions(VARIABLES)
 	}
 
 	updateVariables (polledValues) {
-		this.superjoyInstance.log('debug', `updating variables - polledValues= ${JSON.stringify(polledValues)})`);
+		// this.superJoyInstance.log('debug', `updating variables - polledValues= ${JSON.stringify(polledValues)})`);
 		if (polledValues === undefined) {
 			return
 		}
@@ -45,9 +45,9 @@ export class PTZSuperjoyVariables {
 				newValues[key] = this.valueCache[key] = polledValues[key]
 			}
 		}
-		this.superjoyInstance.log('debug', `updating variables - newValues= ${JSON.stringify(newValues)}`);		
 		if (Object.keys(newValues).length > 0) {
-			this.superjoyInstance.setVariableValues(newValues)
+			this.superJoyInstance.log('debug', `updating variables - newValues= ${JSON.stringify(newValues)}`);		
+			this.superJoyInstance.setVariableValues(newValues)
 		}
 	}
 

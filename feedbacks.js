@@ -1,52 +1,72 @@
-// const { combineRgb } = require('@companion-module/base')
-/*
-initFeedbacks() {
-    this.setFeedbackDefinitions({
-      camIsSelected: {
-        type: 'boolean',
-        name: 'Is Camera Selected',
-        options: [FIELDS.Camera],
-        subscribe: (feedback) => {},
-        unsubscribe: (feedback) => {},
-        callback: (feedback) => {
-          this.log('debug', `Received selected cam feedback request for ${feedback.id} - ${feedback.options.id} - current selection s ${this.selectedCam}`)
-          if (this.variables.getVariable['camid'] == feedback.options.id) {
-            return true
-          }
-          return false
-        },
-      },
-      camIsPreset: {
-        type: 'boolean',
-        name: 'Is Preset Selected',
-        options: [FIELDS.Camera, FIELDS.Preset],
-        subscribe: (feedback) => {},
-        unsubscribe: (feedback) => {},
-        callback: (feedback) => {
-          //          this.log('info',`Received preset feedback request for ${feedback.id} - ${feedback.options.id}`)
-          if (this.variables.getVariable('camid') == feedback.options.id) {
-            return true
-          }
-          return false
-        },
-      },
-      camIsPresetAndSelected: {
-        type: 'boolean',
-        name: 'Is Camera and Preset Selected',
-        options: [FIELDS.Camera, FIELDS.Preset],
-        subscribe: (feedback) => {},
-        unsubscribe: (feedback) => {},
-        callback: (feedback) => {
-          //          this.log('info',`Received preset feedback request for ${feedback.id} - ${feedback.options.id}`)
-          if (this.variables.getVariable('camid') == feedback.options.id && this.selectedPreset[feedback.options.id] == feedback.options.preset) {
-            return true
-          }
-          return false
-        },
-      },
+// import { combineRgb } from '@companion-module/base'
+import { FIELDS } from './fields.js'
+import { combineRgb } from '@companion-module/base'
 
-    })
-    this.log('debug', `Done setting feedback definitions - selected cam is stored as ${this.selectedCam}`)
+export function initFeedbacks() {
+	const ColorBlack = combineRgb(0, 0, 0) // Black
+	const ColorGreen = combineRgb(0, 255, 0) // Green
 
-    //    this.updateCamStatus(1)
-  }*/
+    let feedbacks = {
+      groupIsSelected: {
+        type: 'boolean',
+        name: 'Is Camera Group Selected',
+		    defaultStyle: {
+			    color: ColorBlack,
+			    bgcolor: ColorGreen,
+		    },
+        options: [FIELDS.Group],
+        subscribe: (feedback) => {},
+        unsubscribe: (feedback) => {},
+        callback: (feedback) => {
+          	return this.variables.getVariable('group') === feedback.options.group
+        },
+      },
+  	  cameraIsSelected: {
+        type: 'boolean',
+        name: 'Is Group and Camera Selected',
+		    defaultStyle: {
+			    color: ColorBlack,
+			    bgcolor: ColorGreen,
+		    },
+		    options: [FIELDS.Group, FIELDS.Camera],
+        subscribe: (feedback) => {},
+        unsubscribe: (feedback) => {},
+        callback: (feedback) => {
+        	return this.variables.getVariable('group') === feedback.options.group &&
+				this.variables.getVariable('camid') === feedback.options.id
+        },
+      },
+      presetIsSelected: {
+        type: 'boolean',
+        name: 'Is Group, Camera, and Preset Selected',
+		    defaultStyle: {
+			    color: ColorBlack,
+			    bgcolor: ColorGreen,
+		    },
+		    options: [FIELDS.Group, FIELDS.Camera, FIELDS.Preset],
+        subscribe: (feedback) => {},
+        unsubscribe: (feedback) => {},
+        callback: (feedback) => {
+          	return this.variables.getVariable('group') === feedback.options.group &&
+				this.variables.getVariable('camid') === feedback.options.id &&
+				this.variables.getVariable('preset') === feedback.options.preset
+        },
+	    },
+	    HDMIState: {
+        type: 'boolean',
+        name: 'HDMI Output State',
+		    defaultStyle: {
+			    color: ColorBlack,
+			    bgcolor: ColorGreen,
+		    },
+		    options: [FIELDS.HDMIState],
+        subscribe: (feedback) => {},
+        unsubscribe: (feedback) => {},
+        callback: (feedback) => {
+          	return this.variables.getVariable('hdmi') === feedback.options.hdmistate
+        },
+      },
+    }
+	  this.setFeedbackDefinitions(feedbacks)
+	  return feedbacks
+  }

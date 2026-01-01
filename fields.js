@@ -57,14 +57,45 @@ export const FIELDS = {
     min: 1,
     max: 64,
   },
-  
-/*
-	PollInterval: {
-		type: 'number',
-		label: 'Poll Interval (ms) (0 to disable)',
-		id: 'interval',
-		default: 0,
-		min: 0,
-	},
-  */
+
+  HDMIControl: {
+    type: 'dropdown',
+    id: 'hdmicontrol',
+    label: 'Choose Control Behavior',
+    default: 'toggle',
+    choices: [
+      { id: 'toggle', label: "Toggle"},
+      { id: 'off', label: "Off"},
+      { id: 'on', label: "On"},
+    ],
+    useVariables: true,
+  },
+
+  HDMIState: {
+    type: 'dropdown',
+    id: 'hdmistate',
+    label: 'HDMI State',
+    default: 'on',
+    choices: [
+      { id: 'off', label: "Off"},
+      { id: 'on', label: "On"},
+    ],
+    useVariables: true,
+  },
+
+  CustomButton: {
+    type: 'dropdown',
+    id: 'buttonid',
+    label: 'Custom Button to Trigger',
+    default: 1,
+    choices: [
+      { id: 1, label: "Button 1"},
+      { id: 2, label: "Button 2"},
+      { id: 3, label: "Button 3"},
+      { id: 4, label: "Button 4"},      
+      { id: 5, label: "Joystick"},
+    ],
+    useVariables: true,
+  }
+
 }
