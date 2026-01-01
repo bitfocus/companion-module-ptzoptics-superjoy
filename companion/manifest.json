@@ -3,7 +3,7 @@
 	"name": "ptzoptics-superjoy",
 	"shortname": "superjoy",
 	"description": "PTZ Optics SuperJoy Controller",
-	"version": "1.0.0",
+	"version": "0.0.0",
 	"license": "MIT",
 	"repository": "git+https://github.com/bitfocus/companion-module-ptzoptics-superjoy.git",
 	"bugs": "https://github.com/bitfocus/companion-module-ptzoptics-superjoy/issues",
@@ -11,21 +11,24 @@
 		{
 			"name": "Tim St. Pierre",
 			"email": "tim@ssgc.ca"
+		},
+		{
+			"name": "Bryce Seifert",
+			"email": "contact@bryce.fyi"
+		},
+		{
+			"name": "Jay Lawrence",
+			"email": "contact@jaylaw64@me.com"
 		}
 	],
 	"legacyIds": [],
 	"runtime": {
-		"type": "node18",
+		"type": "node22",
 		"api": "nodejs-ipc",
 		"apiVersion": "0.0.0",
 		"entrypoint": "../index.js"
 	},
 	"manufacturer": "PTZ Optics",
-	"products": [
-		"SuperJoy"
-	],
-	"keywords": [
-		"SuperJoy",
-		"PTZ"
-	]
+	"products": ["SuperJoy"],
+	"keywords": ["SuperJoy", "PTZ"]
 }

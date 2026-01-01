@@ -1,2 +1,6 @@
 package.json
 /LICENSE.md
+node_modules
+dist
+package-lock.json
+*.md
