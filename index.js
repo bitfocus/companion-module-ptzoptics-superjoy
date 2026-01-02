@@ -1,6 +1,6 @@
 import { InstanceBase, runEntrypoint, InstanceStatus } from '@companion-module/base'
 import { configFields } from './config.js'
-import { upgradeScripts } from './upgrade.js'
+import { upgradeScripts } from './upgrades.js'
 import { PTZSuperJoyVariables } from './variables.js'
 import { PTZSuperJoyActions } from './actions.js'
 import { SuperJoyCommandError, handleError } from './error.js'

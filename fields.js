@@ -23,7 +23,7 @@ export const FIELDS = {
 		type: 'number',
 		label: 'Preset Speed',
 		id: 'speed',
-		default: 12,
+		default: 24,
 		min: 1,
 		max: 24,
 		useVariables: true,
@@ -37,25 +37,6 @@ export const FIELDS = {
 		min: 1,
 		max: 5,
 		useVaribles: true,
-	},
-
-	CameraCount: {
-		type: 'number',
-		label: 'Camera Count',
-		id: 'cameracount',
-		default: 7,
-		min: 1,
-		max: 64,
-		useVariables: true,
-	},
-
-	PresetCount: {
-		type: 'number',
-		label: 'Preset Count',
-		id: 'presetcount',
-		default: 8,
-		min: 1,
-		max: 64,
 	},
 
 	HDMIControl: {
