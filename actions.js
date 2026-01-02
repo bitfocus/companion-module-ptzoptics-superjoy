@@ -1,12 +1,30 @@
 import { FIELDS } from './fields.js'
 import { SuperJoyCommandError } from './error.js'
 
+/**
+ * Class representing PTZ SuperJoy actions.
+ * @class
+ * @param {Object} superJoyInstance - The instance of the SuperJoy controller.
+ *
+ * This is implemented as a class so that the SuperJoy instance can be stored
+ * as a member variable for use in callbacks.
+ */
 export class PTZSuperJoyActions {
+	/**
+	 * @property {PTZSuperJoyInstance} superJoyInstance - The instance of the SuperJoy controller.
+	 */
+	superJoyInstance = null
+
 	constructor(superJoyInstance) {
 		this.superJoyInstance = superJoyInstance
 		this.initActions()
 	}
 
+	/**
+	 * Callback function for handling action responses.
+	 * @param {*} json - The json representation of the http response
+	 * @param {*} data - callback data given by the caller with the current url added
+	 */
 	actionCallback = (json, data) => {
 		if (json.result !== '0') {
 			throw new SuperJoyCommandError(`Result is ${json.result}, expect zero`, {
@@ -17,6 +35,9 @@ export class PTZSuperJoyActions {
 		this.superJoyInstance.updateState()
 	}
 
+	/**
+	 * Initialize action definitions for the SuperJoy controller.
+	 */
 	initActions() {
 		let actions = {
 			hdmioutput: {

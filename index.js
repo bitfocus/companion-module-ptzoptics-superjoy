@@ -13,15 +13,59 @@ import { initFeedbacks } from './feedbacks.js'
  * @extends InstanceBase
  */
 class PTZSuperJoyInstance extends InstanceBase {
-	//
+	/**
+	 * @property {Object} config - The Companion configuration object for the module.
+	 */
+	config = {}
+	/**
+	 * @property {PTZSuperJoyVariables} variables - Instance of the variables class for the module.
+	 */
+	variables = null
+	/**
+	 * @property {PTZSuperJoyActions} actions - Instance of the actions class for the module.
+	 */
+	actions = null
+	/**
+	 * @property {Object} feedbacks - The declared feedbacks for the module.
+	 */
+	feedbacks = null
+	/**
+	 * @property {Object} presets - The declared presets for the module.
+	 */
+	presets = null
+	/**
+	 * @property {NodeJS.Timeout} pollingStatusTimer - Timer for polling the controller status.
+	 */
+	pollingStatusTimer = null
+	/**
+	 * @property {string} instanceStatus - Current connection status of the module.
+	 */
+	instanceStatus = null
+
+	/**
+	 * Initialize and configure the module instance when first created.
+	 * @override
+	 * @param {*} config Configuration passed from Companion
+	 */
 	init(config) {
 		this.initOrUpdateConfig(config, 'init')
 	}
 
+	/**
+	 * Update the module configuration after a change in settings.
+	 * @override
+	 * @param {Object} config Configuration passed from Companion
+	 */
 	configUpdated(config) {
 		this.initOrUpdateConfig(config, 'configUpdated')
 	}
 
+	/**
+	 * Configure the module instance with the given configuration. This is called by
+	 * both init() and configUpdated() as there is no difference in the behavior.
+	 * @param {Object} config Configuration passed from Companion
+	 * @param {string} msg Message indicating the source of the configuration change
+	 */
 	initOrUpdateConfig(config, msg) {
 		this.log('debug', `initOrUpdateConfig - config: ${JSON.stringify(config)}`)
 		this.config = config
@@ -40,10 +84,24 @@ class PTZSuperJoyInstance extends InstanceBase {
 		}
 	}
 
-	// updateInstanceStatus updates the Companion connection status.
-	// It wraps updateStatus() so that we only call it when it changes.
-	// This keeps the debug logs from filling up with 'OK' status settings
-	// during polling.
+	/**
+	 * Destroy the module instance when deleted.
+	 * @override
+	 */
+	async destroy() {
+		// Stop the polling timer
+		if (this.pollingTimer !== undefined) {
+			clearInterval(this.pollingTimer)
+		}
+	}
+
+	/**
+	 * Updates the Companion connection status. This wraps updateStatus() so that we only
+	 * call updateStatus() when the status changes. This keeps the debug logs from filling
+	 * up with 'OK' status settings during polling. Actions and other events that change
+	 * the status will still be reflected immediately.
+	 * @param {InstanceStatus} newStatus
+	 */
 	updateInstanceStatus(newStatus) {
 		if (this.instanceStatus != newStatus) {
 			this.instanceStatus = newStatus
@@ -51,6 +109,13 @@ class PTZSuperJoyInstance extends InstanceBase {
 		}
 	}
 
+	/**
+	 * Callback function for handling inquiry responses. This sets all Variables and checks Feedbacks.
+	 * It also starts the polling timer if it is not already running so that changes made directly on
+	 * the controller are reflected in Companion.
+	 * @param {Object} json JSon response from the controller
+	 * @param {Object} _data Callback data given by the caller with the request url added, used.
+	 */
 	sendInquiryCallback = (json, _data) => {
 		// this.log('debug', `url: ${url} json is ${json} data is ${data}`)
 		this.variables.updateVariables(json)
@@ -60,6 +125,11 @@ class PTZSuperJoyInstance extends InstanceBase {
 		}
 	}
 
+	/**
+	 * Send an inquiry command to the controller to get its current status.
+	 * This is called periodically to keep the state in sync as well as explicitly
+	 * by updateState() whenever an action is sent.
+	 */
 	sendInquiry = () => {
 		let argMap = new Map([['action', 'status']])
 		this.sendCommand('inquiry', argMap, {
@@ -68,10 +138,11 @@ class PTZSuperJoyInstance extends InstanceBase {
 		})
 	}
 
-	// UpdateState immediately queries the controller and updates the state.
-	// This also begins the polling cycle. It is called after a connection
-	// is established, and whenever the module sends an Action that modifies
-	// the state of the controller so the state change is reflected as soon as possible.
+	/**
+	 * Immediately query the controller state. This is called whenever the module sends
+	 * an Action that modifies the state of the controller so the state change is reflected
+	 * as soon as possible.
+	 */
 	updateState() {
 		// Stop any ongoing polling, we are going to restart it in the callback.
 		if (this.pollingStatusTimer != null) {
@@ -81,17 +152,13 @@ class PTZSuperJoyInstance extends InstanceBase {
 		this.sendInquiry()
 	}
 
-	// Return config fields for web config
+	/**
+	 * The configuration fields for the web config.
+	 * @override
+	 * @returns (Object[]) Configuration fields for web config
+	 */
 	getConfigFields() {
 		return configFields
-	}
-
-	// When module gets deleted
-	async destroy() {
-		// Stop the polling timer
-		if (this.pollingTimer !== undefined) {
-			clearInterval(this.pollingTimer)
-		}
 	}
 
 	async sendCommand(command, argMap, callback) {
