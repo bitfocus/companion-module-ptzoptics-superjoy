@@ -4,6 +4,12 @@ const ColorWhite = combineRgb(255, 255, 255) // White
 const ColorBlack = combineRgb(0, 0, 0) // Black
 const ColorGreen = combineRgb(0, 255, 0) // Green
 
+/**
+ * Build a preset button forthe 'selectcam' action with a 'cameraIsSelectedFeedback'
+ * @param {number} groupid Group to which the camera belongs
+ * @param {number} camid Camera id within the group
+ * @returns {Button}
+ */
 function buildCameraButton(groupid, camid) {
 	return {
 		type: 'button',
@@ -42,14 +48,43 @@ function buildCameraButton(groupid, camid) {
 	}
 }
 
-function buildCameraPresetButton(groupid, camid, presetid) {
+/**
+ * Build a Preset button to select a group, Camera, and optionally, Preset.
+ * @param {string} action Action placed on the button: 'currentpreset' or 'directpreset'
+ * @param {number} groupid Group ID to select
+ * @param {number} camid Camera ID to select
+ * @param {number} presetid Preset ID to select (only used when action is 'directpreset')
+ * @param {number} speed Preset Speed for preset (only used when action is 'directpreset')
+ * @returns {Button}
+ */
+function buildCameraPresetButton(action, groupid, camid, presetid, speed) {
+	let options = {}
+	let text
+	switch (action) {
+		case 'currentpreset':
+			options = {
+				preset: parseInt(presetid),
+				speed: parseInt(speed),
+			}
+			text = 'Current\n' + parseInt(groupid) + ':' + parseInt(camid) + ':' + parseInt(presetid)
+			break
+		case 'directpreset':
+			options = {
+				group: parseInt(groupid),
+				id: parseInt(camid),
+				preset: parseInt(presetid),
+				speed: parseInt(speed),
+			}
+			text = 'Direct\n' + parseInt(groupid) + ':' + parseInt(camid) + ':' + parseInt(presetid)
+			break
+	}
 	return {
 		type: 'button',
 		category: `Group ${groupid}`,
 		name: `group${groupid}`,
 		options: {},
 		style: {
-			text: 'Preset\n' + parseInt(groupid) + ':' + parseInt(camid) + ':' + parseInt(presetid),
+			text: text,
 			size: 'auto',
 			color: ColorWhite,
 			bgcolor: ColorBlack,
@@ -58,12 +93,8 @@ function buildCameraPresetButton(groupid, camid, presetid) {
 			{
 				down: [
 					{
-						actionId: 'directpreset',
-						options: {
-							group: parseInt(groupid),
-							id: parseInt(camid),
-							preset: parseInt(presetid),
-						},
+						actionId: action,
+						options: options,
 					},
 				],
 			},
@@ -85,14 +116,20 @@ function buildCameraPresetButton(groupid, camid, presetid) {
 	}
 }
 
-function buildHDMIControlPreset(controlAndState) {
+/**
+ * Build an HDMI Control Preset
+ * @param {string} control Action generated: 'toggle', 'on', or 'off'.
+ * @param {string} state Feedback generated: 'on or 'off.
+ * @returns {Button}
+ */
+function buildHDMIControlPreset(control, state) {
 	return {
 		type: 'button',
 		category: `HDMI Control`,
 		name: 'HDMIControl',
 		options: {},
 		style: {
-			text: 'HDMI\n' + controlAndState.control,
+			text: 'HDMI\n' + control,
 			size: 'auto',
 			color: ColorWhite,
 			bgcolor: ColorBlack,
@@ -103,7 +140,7 @@ function buildHDMIControlPreset(controlAndState) {
 					{
 						actionId: 'hdmioutput',
 						options: {
-							hdmicontrol: controlAndState.control,
+							hdmicontrol: control,
 						},
 					},
 				],
@@ -112,7 +149,7 @@ function buildHDMIControlPreset(controlAndState) {
 		feedbacks: [
 			{
 				feedbackId: 'HDMIState',
-				options: { hdmistate: controlAndState.state },
+				options: { hdmistate: state },
 				style: {
 					color: ColorBlack,
 					bgcolor: ColorGreen,
@@ -122,6 +159,11 @@ function buildHDMIControlPreset(controlAndState) {
 	}
 }
 
+/**
+ * Build a Preset Button to activate a Custom Button on the Controller.
+ * @param {number} buttonid
+ * @returns {Button}
+ */
 function buildCustomButtonPreset(buttonid) {
 	return {
 		type: 'button',
@@ -129,7 +171,7 @@ function buildCustomButtonPreset(buttonid) {
 		name: 'triggerCustomButtons',
 		options: {},
 		style: {
-			text: 'Button\n' + buttonid,
+			text: 'Custom\n' + buttonid,
 			size: 'auto',
 			color: ColorWhite,
 			bgcolor: ColorBlack,
@@ -149,14 +191,28 @@ function buildCustomButtonPreset(buttonid) {
 	}
 }
 
+/**
+ * Initialize Presets
+ * @returns {Buttons}
+ */
 export function initPresets() {
 	let presets = {}
 	for (let groupid = 1; groupid <= 5; groupid++) {
 		for (let camid = 1; camid <= 6; camid++) {
-			let presetid = 0
-			presets[`cameraPreset${groupid}_${camid}_${presetid}`] = buildCameraButton(groupid, camid)
-			for (presetid = 1; presetid <= 5; presetid++) {
-				presets[`cameraPreset${groupid}_${camid}_${presetid}`] = buildCameraPresetButton(groupid, camid, presetid)
+			presets[`cameraPreset${groupid}_${camid}`] = buildCameraButton(groupid, camid)
+			for (let presetid = 0; presetid <= 5; presetid++) {
+				presets[`currentPreset${groupid}_${camid}_${presetid}`] = buildCameraPresetButton(
+					'currentpreset',
+					groupid,
+					camid,
+					presetid,
+				)
+				presets[`directPreset${groupid}_${camid}_${presetid}`] = buildCameraPresetButton(
+					'directpreset',
+					groupid,
+					camid,
+					presetid,
+				)
 			}
 		}
 	}
@@ -166,7 +222,7 @@ export function initPresets() {
 		{ control: 'off', state: 'off' },
 	]
 	hdmiControlAndStates.forEach((pair) => {
-		presets[`hdmiPreset${pair.control}`] = buildHDMIControlPreset(pair)
+		presets[`hdmiPreset${pair.control}`] = buildHDMIControlPreset(pair.control, pair.state)
 	})
 	for (let buttonid = 1; buttonid <= 5; buttonid++) {
 		presets[`customButton${buttonid}`] = buildCustomButtonPreset(buttonid)

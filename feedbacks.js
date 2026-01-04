@@ -1,7 +1,10 @@
-// import { combineRgb } from '@companion-module/base'
 import { FIELDS } from './fields.js'
 import { combineRgb } from '@companion-module/base'
 
+/**
+ * Initialize the Feedbacks
+ * @returns Feedbacks defined for the SuperJoyModule
+ */
 export function initFeedbacks() {
 	const ColorBlack = combineRgb(0, 0, 0) // Black
 	const ColorGreen = combineRgb(0, 255, 0) // Green

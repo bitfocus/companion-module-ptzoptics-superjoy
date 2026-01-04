@@ -96,6 +96,15 @@ class PTZSuperJoyInstance extends InstanceBase {
 	}
 
 	/**
+	 * The configuration fields for the web config.
+	 * @override
+	 * @returns (Object[]) Configuration fields for web config
+	 */
+	getConfigFields() {
+		return configFields
+	}
+
+	/**
 	 * Updates the Companion connection status. This wraps updateStatus() so that we only
 	 * call updateStatus() when the status changes. This keeps the debug logs from filling
 	 * up with 'OK' status settings during polling. Actions and other events that change
@@ -150,15 +159,6 @@ class PTZSuperJoyInstance extends InstanceBase {
 			this.pollingStatusTimer = null
 		}
 		this.sendInquiry()
-	}
-
-	/**
-	 * The configuration fields for the web config.
-	 * @override
-	 * @returns (Object[]) Configuration fields for web config
-	 */
-	getConfigFields() {
-		return configFields
 	}
 
 	async sendCommand(command, argMap, callback) {

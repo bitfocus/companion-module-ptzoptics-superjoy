@@ -1,3 +1,7 @@
+/**
+ * Array of scripts executed to to update configuration when changed.
+ * Updates from 1.0.0 to 2.0.0 version.
+ */
 export const upgradeScripts = [
 	function (context, props) {
 		//White Balance mode change
