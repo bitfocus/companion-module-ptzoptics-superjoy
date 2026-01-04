@@ -1,9 +1,13 @@
 {
 	"name": "ptzoptics-superjoy",
-	"version": "1.0.0",
+	"version": "2.0.0",
 	"main": "index.js",
 	"type": "module",
 	"scripts": {
+		"format": "prettier -w .",
+		"package": "companion-module-build",
+		"lint:raw": "eslint",
+		"lint": "yarn lint:raw .",
 		"test": "echo \"Error: no test specified\" && exit 1"
 	},
 	"repository": {
@@ -12,10 +16,19 @@
 	},
 	"license": "MIT",
 	"dependencies": {
-		"@companion-module/base": "~1.4.1",
-		"yarn": "^1.22.21"
+		"@companion-module/base": "~1.12.1",
+		"node-fetch": "^3.3.2",
+		"ws": "^8.18.3"
 	},
 	"devDependencies": {
-		"@companion-module/tools": "^1.2.0"
-	}
+		"@companion-module/tools": "^2.5.0",
+		"eslint": "^9.39.2",
+		"jsdoc": "^4.0.5",
+		"prettier": "^3.7.4"
+	},
+	"engines": {
+		"node": "^22.12"
+	},
+	"prettier": "@companion-module/tools/.prettierrc.json",
+	"packageManager": "yarn@4.11.0"
 }
