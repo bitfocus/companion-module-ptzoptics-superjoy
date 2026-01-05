@@ -5,6 +5,20 @@ const ColorBlack = combineRgb(0, 0, 0) // Black
 const ColorGreen = combineRgb(0, 255, 0) // Green
 
 /**
+ * Build a text header for the Group/Camera header.
+ * @param {number} groupid Group ID used to specify category
+ * @param {number} camid Camera ID used to specify category
+ * @param {string} text Text to display in the header
+ * @returns
+ */
+function buildCameraHeaderText(groupid, camid, text) {
+	return {
+		type: 'text',
+		category: `Group ${groupid} Camera ${camid}`,
+		name: text,
+	}
+}
+/**
  * Build a preset button forthe 'selectcam' action with a 'cameraIsSelectedFeedback'
  * @param {number} groupid Group to which the camera belongs
  * @param {number} camid Camera id within the group
@@ -13,12 +27,12 @@ const ColorGreen = combineRgb(0, 255, 0) // Green
 function buildCameraButton(groupid, camid) {
 	return {
 		type: 'button',
-		category: `Group ${groupid}`,
+		category: `Group ${groupid} Camera ${camid}`,
 		name: `group${groupid}`,
 		options: {},
 		style: {
-			text: 'Camera\n' + parseInt(groupid) + ':' + parseInt(camid),
-			size: 'auto',
+			size: 14,
+			text: 'Group ' + parseInt(groupid) + '\n' + 'Camera ' + parseInt(camid),
 			color: ColorWhite,
 			bgcolor: ColorBlack,
 		},
@@ -66,7 +80,7 @@ function buildCameraPresetButton(action, groupid, camid, presetid, speed) {
 				preset: parseInt(presetid),
 				speed: parseInt(speed),
 			}
-			text = 'Current\n' + parseInt(groupid) + ':' + parseInt(camid) + ':' + parseInt(presetid)
+			text = 'Preset ' + parseInt(presetid)
 			break
 		case 'directpreset':
 			options = {
@@ -75,17 +89,17 @@ function buildCameraPresetButton(action, groupid, camid, presetid, speed) {
 				preset: parseInt(presetid),
 				speed: parseInt(speed),
 			}
-			text = 'Direct\n' + parseInt(groupid) + ':' + parseInt(camid) + ':' + parseInt(presetid)
+			text = 'Group ' + parseInt(groupid) + '\n' + 'Camera ' + parseInt(camid) + '\n' + 'Preset ' + parseInt(presetid)
 			break
 	}
 	return {
 		type: 'button',
-		category: `Group ${groupid}`,
+		category: `Group ${groupid} Camera ${camid}`,
 		name: `group${groupid}`,
 		options: {},
 		style: {
 			text: text,
-			size: 'auto',
+			size: 14,
 			color: ColorWhite,
 			bgcolor: ColorBlack,
 		},
@@ -125,7 +139,10 @@ function buildCameraPresetButton(action, groupid, camid, presetid, speed) {
 function buildHDMIControlPreset(control, state) {
 	return {
 		type: 'button',
-		category: `HDMI Control`,
+		// This category is carefully named to be alphabetically before the Camera groups
+		// This makes it occur at the top of the preset list so it isn't buried under
+		// 30 Group/Camera presets.
+		category: `Control HDMI Output`,
 		name: 'HDMIControl',
 		options: {},
 		style: {
@@ -167,7 +184,10 @@ function buildHDMIControlPreset(control, state) {
 function buildCustomButtonPreset(buttonid) {
 	return {
 		type: 'button',
-		category: `Trigger Custom Buttons`,
+		// This category is carefully named to be alphabetically before the Camera groups
+		// This makes it occur at the top of the preset list so it isn't buried under
+		// 30 Group/Camera presets.
+		category: `Custom Button Trigger`,
 		name: 'triggerCustomButtons',
 		options: {},
 		style: {
@@ -199,7 +219,13 @@ export function initPresets() {
 	let presets = {}
 	for (let groupid = 1; groupid <= 5; groupid++) {
 		for (let camid = 1; camid <= 6; camid++) {
+			presets[`cameraHeaderText_${groupid}_${camid}`] = buildCameraHeaderText(groupid, camid, 'Select Camera')
 			presets[`cameraPreset${groupid}_${camid}`] = buildCameraButton(groupid, camid)
+			presets[`cameraHeaderText_current_${groupid}_${camid}`] = buildCameraHeaderText(
+				groupid,
+				camid,
+				'Recall Preset on current Camera',
+			)
 			for (let presetid = 0; presetid <= 5; presetid++) {
 				presets[`currentPreset${groupid}_${camid}_${presetid}`] = buildCameraPresetButton(
 					'currentpreset',
@@ -207,6 +233,13 @@ export function initPresets() {
 					camid,
 					presetid,
 				)
+			}
+			presets[`cameraHeaderText_direct_${groupid}_${camid}`] = buildCameraHeaderText(
+				groupid,
+				camid,
+				'Recall Preset directly on specified Group and Camera',
+			)
+			for (let presetid = 0; presetid <= 5; presetid++) {
 				presets[`directPreset${groupid}_${camid}_${presetid}`] = buildCameraPresetButton(
 					'directpreset',
 					groupid,
