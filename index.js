@@ -1,11 +1,22 @@
 import { InstanceBase, runEntrypoint, InstanceStatus } from '@companion-module/base'
 import { configFields } from './config.js'
 import { upgradeScripts } from './upgrades.js'
+import { PTZSuperJoyFields } from './fields.js'
 import { PTZSuperJoyVariables } from './variables.js'
 import { PTZSuperJoyActions } from './actions.js'
-import { SuperJoyCommandError, handleError } from './error.js'
 import { initPresets } from './presets.js'
-import { initFeedbacks } from './feedbacks.js'
+import { PTZSuperJoyFeedbacks } from './feedbacks.js'
+import { SuperJoyCommandError, handleSuperJoyCommandError } from './error.js'
+
+/**
+ * SuperJoySequenceError is thrown when an error occurs due to an incorrect initialization sequence
+ */
+class SuperJoySequenceError extends Error {
+	constructor(message) {
+		super(message)
+		this.name = 'SuperJoySequenceError'
+	}
+}
 
 /**
  * Main class for the PTZOptics SuperJoy Companion Module
@@ -18,6 +29,10 @@ class PTZSuperJoyInstance extends InstanceBase {
 	 */
 	config = {}
 	/**
+	 * @property {PTZSuperJoyFields} fields - Instance of the fields class for the module.
+	 */
+	fields = null
+	/**
 	 * @property {PTZSuperJoyVariables} variables - Instance of the variables class for the module.
 	 */
 	variables = null
@@ -26,7 +41,7 @@ class PTZSuperJoyInstance extends InstanceBase {
 	 */
 	actions = null
 	/**
-	 * @property {Object} feedbacks - The declared feedbacks for the module.
+	 * @property {PTZSuperJoyFeedbacks} feedbacks - The declared feedbacks for the module.
 	 */
 	feedbacks = null
 	/**
@@ -73,12 +88,13 @@ class PTZSuperJoyInstance extends InstanceBase {
 		this.instanceStatus = null
 
 		this.updateInstanceStatus(InstanceStatus.Connecting, msg)
+		this.fields = new PTZSuperJoyFields(this)
 		this.variables = new PTZSuperJoyVariables(this)
 		this.actions = new PTZSuperJoyActions(this)
-		this.feedbacks = initFeedbacks.bind(this)()
+		this.feedbacks = new PTZSuperJoyFeedbacks(this)
 		this.presets = initPresets.bind(this)()
 		if (this.config.controller !== undefined) {
-			this.updateState()
+			this.sendInquiry()
 		} else {
 			this.log('error', 'Please configure the controller ip address or host')
 		}
@@ -105,6 +121,28 @@ class PTZSuperJoyInstance extends InstanceBase {
 	}
 
 	/**
+	 * Return the PTZSuperJoyFields instance for this module.
+	 * @returns {PTZSuperJoyFields} The fields instance
+	 */
+	getFields() {
+		if (this.fields == null) {
+			throw new SuperJoySequenceError('Fields not initialized')
+		}
+		return this.fields
+	}
+
+	/**
+	 * Return the PTZSuperJoyVariables instance for this module.
+	 * @returns {PTZSuperJoyVariables} The variables instance
+	 */
+	getVariables() {
+		if (this.variables == null) {
+			throw new SuperJoySequenceError('Variables not initialized')
+		}
+		return this.variables
+	}
+
+	/**
 	 * Updates the Companion connection status. This wraps updateStatus() so that we only
 	 * call updateStatus() when the status changes. This keeps the debug logs from filling
 	 * up with 'OK' status settings during polling. Actions and other events that change
@@ -119,9 +157,65 @@ class PTZSuperJoyInstance extends InstanceBase {
 	}
 
 	/**
+	 * Send a command to the SuperJoy controller, handle the response, and manage polling.
+	 * @async
+	 * @throws {SuperJoyCommandError} when an error occurs during the command or response processing.
+	 * @returns {Promise<void>} Resolves when the command is complete.
+	 * @param {string} command The command portion of the URL
+	 * @param {*} argMap Map of arguments to the command
+	 * @param {*} callback Callback to be called on a successful request
+	 *
+	 * The controller gets very upset if more than one command is sent at a time before a
+	 * response. This can hang the controller requiring a power cycle. The syncronization
+	 * algorithm to prevent this works as follows:
+	 *
+	 * 1) Stop polling before sending any command. This ensures that no polling inquiries will
+	 * 	occur while the command is being processed.
+	 * 2) Restart polling in a `finally` clause after the command is complete, whether it
+	 *	succeeded or failed. This will cause a {@link sendInquiry} to be sent one second later.
+	 *
+	 * This algorithm means status is updated approximately every second. To make Actions that change
+	 * state slightly more responsive, the {@link actionCallback} functions calls {@link sendInquiry} immediately
+	 * after a successful command. Which in turn causes an immediate status update followed by resumption of
+	 * the one second polling interval.
+	 */
+	async sendCommand(command, argMap, callback) {
+		this.stopPolling()
+		let url = `http://${this.config.controller}/cgi-bin/joyctrl.cgi?f=${command}`
+		argMap.forEach((value, key) => {
+			url = url + `&${key}=${value}`
+		})
+		// this.log('debug', `Sending command to SuperJoy: ${url}`)
+		fetch(url)
+			.then((response) => {
+				if (response.status != 200) {
+					throw new SuperJoyCommandError(`Error response - expected 200, got ${response.status}`, {
+						url: url,
+						superJoyInstance: this,
+					})
+				}
+				this.updateInstanceStatus('ok')
+				return response.json()
+			})
+			.then((json) => {
+				// Add the URL that was sent to the callback data for error reporting
+				if (callback?.data == null) {
+					callback.data = { url: url }
+				} else {
+					callback.data.url = url
+				}
+				callback.function(json, callback.data)
+			})
+			.catch((e) => {
+				handleSuperJoyCommandError(e)
+			})
+			.finally(() => {
+				this.startPolling()
+			})
+	}
+
+	/**
 	 * Callback function for handling inquiry responses. This sets all Variables and checks Feedbacks.
-	 * It also starts the polling timer if it is not already running so that changes made directly on
-	 * the controller are reflected in Companion.
 	 * @param {Object} json JSon response from the controller
 	 * @param {Object} _data Callback data given by the caller with the request url added, used.
 	 */
@@ -129,15 +223,11 @@ class PTZSuperJoyInstance extends InstanceBase {
 		// this.log('debug', `url: ${url} json is ${json} data is ${data}`)
 		this.variables.updateVariables(json)
 		this.checkFeedbacks()
-		if (this.pollingStatusTimer == null) {
-			this.pollingStatusTimer = setInterval(this.sendInquiry, 1000)
-		}
 	}
 
 	/**
 	 * Send an inquiry command to the controller to get its current status.
-	 * This is called periodically to keep the state in sync as well as explicitly
-	 * by updateState() whenever an action is sent.
+	 * This is called periodically to keep the state in sync
 	 */
 	sendInquiry = () => {
 		let argMap = new Map([['action', 'status']])
@@ -148,46 +238,22 @@ class PTZSuperJoyInstance extends InstanceBase {
 	}
 
 	/**
-	 * Immediately query the controller state. This is called whenever the module sends
-	 * an Action that modifies the state of the controller so the state change is reflected
-	 * as soon as possible.
+	 * Start the polling timer to call {@link sendInquiry} in one second.
 	 */
-	updateState() {
-		// Stop any ongoing polling, we are going to restart it in the callback.
+	startPolling() {
+		if (this.pollingStatusTimer == null) {
+			this.pollingStatusTimer = setInterval(this.sendInquiry, 1000)
+		}
+	}
+
+	/**
+	 * Stop the polling timer.
+	 */
+	stopPolling() {
 		if (this.pollingStatusTimer != null) {
 			clearInterval(this.pollingStatusTimer)
 			this.pollingStatusTimer = null
 		}
-		this.sendInquiry()
-	}
-
-	async sendCommand(command, argMap, callback) {
-		let url = `http://${this.config.controller}/cgi-bin/joyctrl.cgi?f=${command}`
-		argMap.forEach((value, key) => {
-			url = url + `&${key}=${value}`
-		})
-		fetch(url)
-			.then((response) => {
-				if (response.status != 200) {
-					throw new SuperJoyCommandError(`Error response - expected 200, got ${response.status}`, {
-						url: url,
-						caller: this,
-					})
-				}
-				this.updateInstanceStatus('ok')
-				return response.json()
-			})
-			.then((json) => {
-				if (callback?.data == null) {
-					callback.data = { url: url }
-				} else {
-					callback.data.url = url
-				}
-				callback.function(json, callback.data)
-			})
-			.catch((e) => {
-				handleError(e)
-			})
 	}
 }
 

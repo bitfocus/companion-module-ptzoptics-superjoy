@@ -63,7 +63,7 @@ export class PTZSuperJoyVariables {
 	 * @param {JSON} polledValues
 	 */
 	updateVariables(polledValues) {
-		// this.superJoyInstance.log('debug', `updating variables - polledValues= ${JSON.stringify(polledValues)})`);
+		// this.superJoyInstance.log('debug', `updating variables - polledValues= ${JSON.stringify(polledValues)})`)
 		if (polledValues === undefined) {
 			return
 		}
@@ -76,11 +76,20 @@ export class PTZSuperJoyVariables {
 				case 'camid':
 				case 'preset':
 				case 'hdmi':
-					// The incoming values are JSON objects, so we need to stringify them to store the
-					// variables as text values.
-					let stringVal = JSON.stringify(polledValues[key])
-					if (this.valueCache[key] !== stringVal) {
-						newValues[key] = this.valueCache[key] = stringVal
+					{
+						// The incoming values are JSON objects, so we need to stringify them to store the
+						// variables as text values.
+						if (!Object.hasOwn(polledValues, key)) {
+							this.superJoyInstance.log(
+								'warn',
+								`updateVariables: polled_values missing key ${key}, polled_values = ${JSON.stringify(polledValues)}`,
+							)
+							return
+						}
+						let stringVal = JSON.stringify(polledValues[key])
+						if (this.valueCache[key] !== stringVal) {
+							newValues[key] = this.valueCache[key] = stringVal
+						}
 					}
 					break
 				default:
