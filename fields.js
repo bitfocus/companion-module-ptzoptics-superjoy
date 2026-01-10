@@ -1,42 +1,34 @@
 export const FIELDS = {
 	Camera: {
-		type: 'number',
+		type: 'textinput',
 		label: 'Camera ID',
 		id: 'id',
 		default: 1,
-		min: 1,
-		max: 255,
-		useVariables: 'true',
+		useVariables: true,
 	},
 
 	Preset: {
-		type: 'number',
-		label: 'Preset',
+		type: 'textinput',
+		label: 'Preset (1 - 255',
 		id: 'preset',
 		default: 0,
-		min: 0,
-		max: 255,
 		useVariables: true,
 	},
 
 	Speed: {
-		type: 'number',
-		label: 'Preset Speed',
+		type: 'textinput',
+		label: 'Preset Speed (1 - 24)',
 		id: 'speed',
 		default: 24,
-		min: 1,
-		max: 24,
 		useVariables: true,
 	},
 
 	Group: {
-		type: 'number',
-		label: 'Group',
+		type: 'textinput',
+		label: 'Group (1 - 5)',
 		id: 'group',
 		default: 1,
-		min: 1,
-		max: 5,
-		useVaribles: true,
+		useVariables: true,
 	},
 
 	HDMIControl: {
@@ -49,7 +41,6 @@ export const FIELDS = {
 			{ id: 'off', label: 'Off' },
 			{ id: 'on', label: 'On' },
 		],
-		useVariables: true,
 	},
 
 	HDMIState: {
@@ -61,21 +52,13 @@ export const FIELDS = {
 			{ id: 'off', label: 'Off' },
 			{ id: 'on', label: 'On' },
 		],
-		useVariables: true,
 	},
 
 	CustomButton: {
-		type: 'dropdown',
+		type: 'textinput',
 		id: 'buttonid',
-		label: 'Custom Button to Trigger',
+		label: 'Custom Button to Trigger (1 - 5)',
 		default: 1,
-		choices: [
-			{ id: 1, label: 'Button 1' },
-			{ id: 2, label: 'Button 2' },
-			{ id: 3, label: 'Button 3' },
-			{ id: 4, label: 'Button 4' },
-			{ id: 5, label: 'Joystick' },
-		],
 		useVariables: true,
 	},
 }

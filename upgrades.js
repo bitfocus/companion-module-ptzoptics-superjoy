@@ -36,11 +36,18 @@ export const upgradeScripts = [
 		// For Actions and Feedbacks, we need to store the value of 'group'
 		// from the 1.0.0 config and apply it to all of the actions and feedbacks
 		// where it was being used as a default.
+		// The new action names are also exactly the http function names so they need
+		// to be mapped.
+		let actionMap = {
+			selectcam: 'camselect',
+			directpreset: 'directpresets',
+		}
 		let originalGroup = props.config.group
 		props.actions.forEach((action) => {
 			switch (action.actionId) {
 				case 'selectcam':
 				case 'directpreset':
+					action.actionId = actionMap[action.actionId]
 					action.options.group = originalGroup
 					changed.updatedActions.push(action)
 					console.log(`SuperJoy Upgrade 1.0.0: Action ${JSON.stringify(action)}`)

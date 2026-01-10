@@ -20,7 +20,7 @@ export class SuperJoyCommandError extends Error {
  */
 export function handleError(err) {
 	if (err instanceof SuperJoyCommandError) {
-		err.caller.log('error', `${err.name}: ${err.message}`)
+		console.log('error', `${err.name}: ${err.message}`)
 		err.caller.updateInstanceStatus('connection_failure')
 	} else {
 		// Someone called our error handler for some other exception
