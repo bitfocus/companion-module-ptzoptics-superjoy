@@ -7,6 +7,7 @@ import { PTZSuperJoyActions } from './actions.js'
 import { initPresets } from './presets.js'
 import { PTZSuperJoyFeedbacks } from './feedbacks.js'
 import { SuperJoyCommandError, handleSuperJoyCommandError } from './error.js'
+import { Queue } from './queue.js'
 
 /**
  * SuperJoySequenceError is thrown when an error occurs due to an incorrect initialization sequence
@@ -58,6 +59,22 @@ class PTZSuperJoyInstance extends InstanceBase {
 	instanceStatus = null
 
 	/**
+	 * @property {Queue} queue - Queue to manage asynchronous tasks sequentially.
+	 */
+	queue = null
+
+	/**
+	 * @property {number} sequence - Sequence number for commands sent to the controller.
+	 */
+	sequence = 0
+
+	constructor(internal) {
+		super(internal)
+		this.queue = new Queue(250) // 250 ms delay between tasks
+		this.sequence = 0
+	}
+
+	/**
 	 * Initialize and configure the module instance when first created.
 	 * @override
 	 * @param {*} config Configuration passed from Companion
@@ -79,7 +96,7 @@ class PTZSuperJoyInstance extends InstanceBase {
 	 * Configure the module instance with the given configuration. This is called by
 	 * both init() and configUpdated() as there is no difference in the behavior.
 	 * @param {Object} config Configuration passed from Companion
-	 * @param {string} msg Message indicating the source of the configuration change
+	 * @param {string} msg Message indicating the source of the configuration change ('init' or 'configUpdated')
 	 */
 	initOrUpdateConfig(config, msg) {
 		this.log('debug', `initOrUpdateConfig - config: ${JSON.stringify(config)}`)
@@ -180,24 +197,34 @@ class PTZSuperJoyInstance extends InstanceBase {
 	 * the one second polling interval.
 	 */
 	async sendCommand(command, argMap, callback) {
-		this.stopPolling()
-		let url = `http://${this.config.controller}/cgi-bin/joyctrl.cgi?f=${command}`
-		argMap.forEach((value, key) => {
-			url = url + `&${key}=${value}`
-		})
-		// this.log('debug', `Sending command to SuperJoy: ${url}`)
-		fetch(url)
-			.then((response) => {
-				if (response.status != 200) {
-					throw new SuperJoyCommandError(`Error response - expected 200, got ${response.status}`, {
-						url: url,
-						superJoyInstance: this,
-					})
-				}
-				this.updateInstanceStatus('ok')
-				return response.json()
+		return this.queue.push(async () => {
+			this.stopPolling()
+			this.sequence = (this.sequence + 1) % 10000
+			let url = `http://${this.config.controller}/cgi-bin/joyctrl.cgi?f=${command}`
+			argMap.forEach((value, key) => {
+				url = url + `&${key}=${value}`
 			})
-			.then((json) => {
+			this.log('debug', `Sending command to SuperJoy: sequence ${this.sequence} url: ${url}`)
+			try {
+				const response = await fetch(url)
+				if (response.status != 200) {
+					throw new SuperJoyCommandError(
+						`Error response: sequence ${this.sequence} expected 200, got ${response.status}`,
+						{
+							url: url,
+							superJoyInstance: this,
+						},
+					)
+				}
+				this.log(
+					'debug',
+					`Received response: sequence ${this.sequence} url: ${url} status: ${response.status} statusText : ${response.statusText}`,
+				)
+				this.updateInstanceStatus('ok')
+
+				const json = await response.json()
+				this.log('debug', `Received json: sequence ${this.sequence} url: ${url} json: ${JSON.stringify(json)}`)
+
 				// Add the URL that was sent to the callback data for error reporting
 				if (callback?.data == null) {
 					callback.data = { url: url }
@@ -205,13 +232,14 @@ class PTZSuperJoyInstance extends InstanceBase {
 					callback.data.url = url
 				}
 				callback.function(json, callback.data)
-			})
-			.catch((e) => {
-				handleSuperJoyCommandError(e)
-			})
-			.finally(() => {
+			} catch (error) {
+				this.log('debug', `Catch: sequence ${this.sequence}`)
+				handleSuperJoyCommandError(error)
+			} finally {
+				this.log('debug', `Finally: sequence ${this.sequence}`)
 				this.startPolling()
-			})
+			}
+		})
 	}
 
 	/**
@@ -230,11 +258,13 @@ class PTZSuperJoyInstance extends InstanceBase {
 	 * This is called periodically to keep the state in sync
 	 */
 	sendInquiry = () => {
-		let argMap = new Map([['action', 'status']])
-		this.sendCommand('inquiry', argMap, {
-			function: this.sendInquiryCallback,
-			data: null,
-		})
+		if (this.queue.length() == 0) {
+			let argMap = new Map([['action', 'status']])
+			this.sendCommand('inquiry', argMap, {
+				function: this.sendInquiryCallback,
+				data: null,
+			})
+		}
 	}
 
 	/**
@@ -242,7 +272,7 @@ class PTZSuperJoyInstance extends InstanceBase {
 	 */
 	startPolling() {
 		if (this.pollingStatusTimer == null) {
-			this.pollingStatusTimer = setInterval(this.sendInquiry, 1000)
+			this.pollingStatusTimer = setInterval(this.sendInquiry, 5000)
 		}
 	}
 

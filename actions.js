@@ -43,7 +43,6 @@ export class PTZSuperJoyActions {
 				superJoyInstance: this.superJoyInstance,
 			})
 		}
-		this.superJoyInstance.sendInquiry()
 	}
 
 	/**
