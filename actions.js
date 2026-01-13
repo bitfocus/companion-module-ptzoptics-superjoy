@@ -1,13 +1,20 @@
 import { FIELDS } from './fields.js'
 import { SuperJoyCommandError } from './error.js'
 
+const ACTION_NAMES = {
+	hdmiout: 'HDMI Output Control',
+	custom: 'Trigger Custom Button',
+	camselect: 'Select Group and Camera',
+	directpresets: 'Select Group, Camera, and Preset',
+	presets: 'Select Preset on Current Camera',
+}
+
 /**
  * Class representing PTZ SuperJoy actions.
  * @class
- * @param {Object} superJoyInstance - The instance of the SuperJoy controller.
  *
  * This is implemented as a class so that the SuperJoy instance can be stored
- * as a member variable for use in callbacks.
+ * as a member variable for use in callbacks and error messages.
  */
 export class PTZSuperJoyActions {
 	/**
@@ -15,6 +22,10 @@ export class PTZSuperJoyActions {
 	 */
 	superJoyInstance = null
 
+	/**
+	 * Constructor for PTZSuperJoyActions.
+	 * @param {PTZSuperJoyInstance} superJoyInstance - The instance of the SuperJoy controller.
+	 */
 	constructor(superJoyInstance) {
 		this.superJoyInstance = superJoyInstance
 		this.initActions()
@@ -29,10 +40,9 @@ export class PTZSuperJoyActions {
 		if (json.result !== '0') {
 			throw new SuperJoyCommandError(`Result is ${json.result}, expect zero`, {
 				url: data.url,
-				caller: this,
+				superJoyInstance: this.superJoyInstance,
 			})
 		}
-		this.superJoyInstance.updateState()
 	}
 
 	/**
@@ -40,8 +50,8 @@ export class PTZSuperJoyActions {
 	 */
 	initActions() {
 		let actions = {
-			hdmioutput: {
-				name: 'HDMI Output Control',
+			hdmiout: {
+				name: ACTION_NAMES['hdmiout'],
 				options: [FIELDS.HDMIControl],
 				callback: async (action) => {
 					let argMap = new Map([['action', action.options.hdmicontrol]])
@@ -51,13 +61,16 @@ export class PTZSuperJoyActions {
 					})
 				},
 			},
-			custombutton: {
-				name: 'Trigger Custom Button',
+			custom: {
+				name: ACTION_NAMES['custom'],
 				options: [FIELDS.CustomButton],
-				callback: async (action) => {
+				callback: async (action, context) => {
+					let fields = this.superJoyInstance.getFields()
+					let buttonTxt = await context.parseVariablesInString(action.options.buttonid)
+					let buttonId = fields.validateCustomButton(ACTION_NAMES['custom'], buttonTxt)
 					let argMap = new Map([
 						['action', 'trigger'],
-						['buttonid', action.options.buttonid],
+						['buttonid', buttonId],
 					])
 					this.superJoyInstance.sendCommand('custom', argMap, {
 						function: this.actionCallback,
@@ -65,13 +78,17 @@ export class PTZSuperJoyActions {
 					})
 				},
 			},
-			selectcam: {
-				name: 'Select Group and Camera',
+			camselect: {
+				name: ACTION_NAMES['camselect'],
 				options: [FIELDS.Group, FIELDS.Camera],
-				callback: async (action) => {
+				callback: async (action, context) => {
+					let fields = this.superJoyInstance.getFields()
+					let groupTxt = await context.parseVariablesInString(action.options.group)
+					let camidTxt = await context.parseVariablesInString(action.options.id)
+					let groupAndCam = fields.validateGroupAndCamera(ACTION_NAMES['camselect'], groupTxt, camidTxt)
 					let argMap = new Map([
-						['group', action.options.group],
-						['camid', action.options.id],
+						['group', groupAndCam.group],
+						['camid', groupAndCam.camid],
 					])
 					this.superJoyInstance.sendCommand('camselect', argMap, {
 						function: this.actionCallback,
@@ -79,16 +96,24 @@ export class PTZSuperJoyActions {
 					})
 				},
 			},
-			directpreset: {
-				name: 'Select Group, Camera, and Preset',
+			directpresets: {
+				name: ACTION_NAMES['directpresets'],
 				options: [FIELDS.Group, FIELDS.Camera, FIELDS.Preset, FIELDS.Speed],
-				callback: async (action) => {
+				callback: async (action, context) => {
+					let fields = this.superJoyInstance.getFields()
+					let groupTxt = await context.parseVariablesInString(action.options.group)
+					let camidTxt = await context.parseVariablesInString(action.options.id)
+					let groupAndCam = fields.validateGroupAndCamera(ACTION_NAMES['directpresets'], groupTxt, camidTxt)
+					let presetTxt = await context.parseVariablesInString(action.options.preset)
+					let presetSpeedTxt = await context.parseVariablesInString(action.options.speed)
+					let preset = fields.validatePreset(ACTION_NAMES['directpresets'], presetTxt)
+					let presetSpeed = fields.validatePresetSpeed(ACTION_NAMES['directpresets'], presetSpeedTxt)
 					let argMap = new Map([
 						['action', 'recall'],
-						['group', action.options.group],
-						['camid', action.options.id],
-						['preset', action.options.preset],
-						['presetspeed', action.options.speed],
+						['group', groupAndCam.group],
+						['camid', groupAndCam.camid],
+						['preset', preset],
+						['presetspeed', presetSpeed],
 					])
 					this.superJoyInstance.sendCommand('directpresets', argMap, {
 						function: this.actionCallback,
@@ -96,14 +121,19 @@ export class PTZSuperJoyActions {
 					})
 				},
 			},
-			currentpreset: {
-				name: 'Select Preset on Current Camera',
+			presets: {
+				name: ACTION_NAMES['presets'],
 				options: [FIELDS.Preset, FIELDS.Speed],
-				callback: async (action) => {
+				callback: async (action, context) => {
+					let fields = this.superJoyInstance.getFields()
+					let presetTxt = await context.parseVariablesInString(action.options.preset)
+					let presetSpeedTxt = await context.parseVariablesInString(action.options.speed)
+					let preset = fields.validatePreset(ACTION_NAMES['presets'], presetTxt)
+					let presetSpeed = fields.validatePresetSpeed(ACTION_NAMES['presets'], presetSpeedTxt)
 					let argMap = new Map([
 						['action', 'recall'],
-						['preset', action.options.preset],
-						['presetspeed', action.options.speed],
+						['preset', preset],
+						['presetspeed', presetSpeed],
 					])
 					this.superJoyInstance.sendCommand('presets', argMap, {
 						function: this.actionCallback,

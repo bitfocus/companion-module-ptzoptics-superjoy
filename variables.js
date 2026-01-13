@@ -60,24 +60,45 @@ export class PTZSuperJoyVariables {
 	/**
 	 * Update the value of all variables in response to an Inquiry command. It compares the values
 	 * reported by `polledValues` to the `valueCache` and updates and variables that have changed.
-	 * @param {Object} polledValues
+	 * @param {JSON} polledValues
 	 */
 	updateVariables(polledValues) {
-		// this.superJoyInstance.log('debug', `updating variables - polledValues= ${JSON.stringify(polledValues)})`);
+		// this.superJoyInstance.log('debug', `updating variables - polledValues= ${JSON.stringify(polledValues)})`)
 		if (polledValues === undefined) {
 			return
 		}
 
 		let newValues = {}
-
 		for (const v of VARIABLES) {
 			let key = v.variableId
-			if (key in polledValues && this.valueCache[key] !== polledValues[key]) {
-				newValues[key] = this.valueCache[key] = polledValues[key]
+			switch (key) {
+				case 'group':
+				case 'camid':
+				case 'preset':
+				case 'hdmi':
+					{
+						// The incoming values are JSON objects, so we need to stringify them to store the
+						// variables as text values.
+						if (!Object.hasOwn(polledValues, key)) {
+							this.superJoyInstance.log(
+								'warn',
+								`updateVariables: polled_values missing key ${key}, polled_values = ${JSON.stringify(polledValues)}`,
+							)
+							return
+						}
+						let stringVal = JSON.stringify(polledValues[key])
+						if (this.valueCache[key] !== stringVal) {
+							newValues[key] = this.valueCache[key] = stringVal
+						}
+					}
+					break
+				default:
+					this.superJoyInstance.log('warn', `updateVariables: unhandled variable key ${key}`)
+					break
 			}
 		}
 		if (Object.keys(newValues).length > 0) {
-			this.superJoyInstance.log('debug', `updating variables - newValues= ${JSON.stringify(newValues)}`)
+			// this.superJoyInstance.log('debug', `updating variables - newValues= ${JSON.stringify(newValues)}`)
 			this.superJoyInstance.setVariableValues(newValues)
 		}
 	}

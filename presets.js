@@ -19,7 +19,7 @@ function buildCameraHeaderText(groupid, camid, text) {
 	}
 }
 /**
- * Build a preset button forthe 'selectcam' action with a 'cameraIsSelectedFeedback'
+ * Build a preset button for the 'camselect' action with a 'cameraIsSelectedFeedback'
  * @param {number} groupid Group to which the camera belongs
  * @param {number} camid Camera id within the group
  * @returns {Button}
@@ -40,7 +40,7 @@ function buildCameraButton(groupid, camid) {
 			{
 				down: [
 					{
-						actionId: 'selectcam',
+						actionId: 'camselect',
 						options: {
 							group: parseInt(groupid),
 							id: parseInt(camid),

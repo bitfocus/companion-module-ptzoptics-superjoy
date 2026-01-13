@@ -4,3 +4,5 @@ package-lock.json
 /pkg.tgz
 out/
 DEBUG-PACKAGED
+.yarn/*
+ptzoptics-superjoy*.tgz
