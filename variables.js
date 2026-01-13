@@ -98,7 +98,7 @@ export class PTZSuperJoyVariables {
 			}
 		}
 		if (Object.keys(newValues).length > 0) {
-			this.superJoyInstance.log('debug', `updating variables - newValues= ${JSON.stringify(newValues)}`)
+			// this.superJoyInstance.log('debug', `updating variables - newValues= ${JSON.stringify(newValues)}`)
 			this.superJoyInstance.setVariableValues(newValues)
 		}
 	}
