@@ -2,7 +2,7 @@
 
 This module allows you to control the [PTZOptics SuperJoy Controller](https://ptzoptics.com/superjoy/). It provides all the functionality available in the [SuperJoy HTTP-CGI Commands documentation](https://ptzoptics.com/wp-content/uploads/2025/03/SuperJoy-HTTP-CGI-Commands.pdf) as of January 2, 2026.
 
-A demostration video [BitFocus Companion - PTZOptics SuperJoy Module 2.0.0](https://youtu.be/XYAS9yObGAw) is available on YouTube.
+A demostration video [BitFocus Companion - PTZOptics SuperJoy Module 2.0.0](https://youtu.be/yF2KJxUafj4) is available on YouTube.
 
 **Configuration Instructions**
 

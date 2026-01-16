@@ -130,17 +130,17 @@ export class PTZSuperJoyFields {
 	 * @returns {string} Validated button ID as a string
 	 */
 	validateCustomButton(locationTxt, valueTxt) {
-		return this.fields.validateNumberInRange(locationTxt, valueTxt, 1, 5, FIELDS.CustomButton.label)
+		return this.validateNumberInRange(locationTxt, valueTxt, 1, 5, FIELDS.CustomButton.label)
 	}
 
 	/**
-	 * Valdate that a preset number is valid (1-255)
+	 * Valdate that a preset number is valid (0-255)
 	 * @param {string} locationTxt Description of the location of the preset field (action or feedback)
 	 * @param {string} valueTxt Incoming preset text value
 	 * @returns {string} Validated preset as a string
 	 */
 	validatePreset(locationTxt, valueTxt) {
-		return this.validateNumberInRange(locationTxt, valueTxt, 1, 255, FIELDS.Preset.label)
+		return this.validateNumberInRange(locationTxt, valueTxt, 0, 255, FIELDS.Preset.label)
 	}
 
 	/**
