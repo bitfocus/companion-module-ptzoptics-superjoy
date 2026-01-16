@@ -4,7 +4,7 @@ This module allows you to control the [PTZOptics SuperJoy Controller](https://pt
 
 ## Getting Started
 
-See [HELP.md](https://github.com/bitfocus/companion-module-birddog-ptz/blob/main/companion/HELP.md)
+See [HELP.md](https://github.com/bitfocus/companion-module-ptzoptics-superjoy/blob/main/companion/HELP.md)
 
 ## Changelog
 
