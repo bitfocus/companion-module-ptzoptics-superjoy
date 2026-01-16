@@ -64,25 +64,25 @@ function buildCameraButton(groupid, camid) {
 
 /**
  * Build a Preset button to select a group, Camera, and optionally, Preset.
- * @param {string} action Action placed on the button: 'currentpreset' or 'directpreset'
+ * @param {string} action Action placed on the button: 'presets' or 'directpresets'
  * @param {number} groupid Group ID to select
  * @param {number} camid Camera ID to select
- * @param {number} presetid Preset ID to select (only used when action is 'directpreset')
- * @param {number} speed Preset Speed for preset (only used when action is 'directpreset')
+ * @param {number} presetid Preset ID to select (only used when action is 'directpresets')
+ * @param {number} speed Preset Speed for preset (only used when action is 'directpresets')
  * @returns {Button}
  */
 function buildCameraPresetButton(action, groupid, camid, presetid, speed) {
 	let options = {}
 	let text
 	switch (action) {
-		case 'currentpreset':
+		case 'presets':
 			options = {
 				preset: parseInt(presetid),
 				speed: parseInt(speed),
 			}
 			text = 'Preset ' + parseInt(presetid)
 			break
-		case 'directpreset':
+		case 'directpresets':
 			options = {
 				group: parseInt(groupid),
 				id: parseInt(camid),
@@ -155,7 +155,7 @@ function buildHDMIControlPreset(control, state) {
 			{
 				down: [
 					{
-						actionId: 'hdmioutput',
+						actionId: 'hdmiout',
 						options: {
 							hdmicontrol: control,
 						},
@@ -200,7 +200,7 @@ function buildCustomButtonPreset(buttonid) {
 			{
 				down: [
 					{
-						actionId: 'custombutton',
+						actionId: 'custom',
 						options: {
 							buttonid: buttonid,
 						},
@@ -227,11 +227,12 @@ export function initPresets() {
 				'Recall Preset on current Camera',
 			)
 			for (let presetid = 0; presetid <= 5; presetid++) {
-				presets[`currentPreset${groupid}_${camid}_${presetid}`] = buildCameraPresetButton(
-					'currentpreset',
+				presets[`presets${groupid}_${camid}_${presetid}`] = buildCameraPresetButton(
+					'presets',
 					groupid,
 					camid,
 					presetid,
+					24,
 				)
 			}
 			presets[`cameraHeaderText_direct_${groupid}_${camid}`] = buildCameraHeaderText(
@@ -240,11 +241,12 @@ export function initPresets() {
 				'Recall Preset directly on specified Group and Camera',
 			)
 			for (let presetid = 0; presetid <= 5; presetid++) {
-				presets[`directPreset${groupid}_${camid}_${presetid}`] = buildCameraPresetButton(
-					'directpreset',
+				presets[`directpresets${groupid}_${camid}_${presetid}`] = buildCameraPresetButton(
+					'directpresets',
 					groupid,
 					camid,
 					presetid,
+					24,
 				)
 			}
 		}
@@ -258,7 +260,7 @@ export function initPresets() {
 		presets[`hdmiPreset${pair.control}`] = buildHDMIControlPreset(pair.control, pair.state)
 	})
 	for (let buttonid = 1; buttonid <= 5; buttonid++) {
-		presets[`customButton${buttonid}`] = buildCustomButtonPreset(buttonid)
+		presets[`custom${buttonid}`] = buildCustomButtonPreset(buttonid)
 	}
 	this.setPresetDefinitions(presets)
 	return presets
