@@ -2,3 +2,7 @@ node_modules/
 package-lock.json
 /pkg
 /pkg.tgz
+out/
+DEBUG-PACKAGED
+.yarn/*
+ptzoptics-superjoy*.tgz
