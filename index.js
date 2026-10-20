@@ -71,6 +71,12 @@ class PTZSuperJoyInstance extends InstanceBase {
 	polling = false
 
 	/**
+	 * @property {number} pollGeneration - Incremented each time polling starts so that a loop
+	 * started by an earlier config exits instead of running alongside the new one.
+	 */
+	pollGeneration = 0
+
+	/**
 	 * @property {string} instanceStatus - Current connection status of the module.
 	 */
 	instanceStatus = null
@@ -125,11 +131,21 @@ class PTZSuperJoyInstance extends InstanceBase {
 		this.actions = new PTZSuperJoyActions(this)
 		this.feedbacks = new PTZSuperJoyFeedbacks(this)
 		this.presets = initPresets.bind(this)()
-		if (this.config.controller !== undefined) {
+		if (this.getController() !== '') {
 			this.pollStatus()
 		} else {
+			this.polling = false
+			this.updateInstanceStatus(InstanceStatus.BadConfig)
 			this.log('error', 'Please configure the controller ip address or host')
 		}
+	}
+
+	/**
+	 * Return the configured controller ip address or host, trimmed.
+	 * @returns {string} The controller address, or '' if not configured
+	 */
+	getController() {
+		return (this.config.controller ?? '').trim()
 	}
 
 	/**
@@ -204,9 +220,14 @@ class PTZSuperJoyInstance extends InstanceBase {
 	 * can be customized per command.
 	 */
 	async sendCommand(command, argMap, callback) {
+		const controller = this.getController()
+		if (controller === '') {
+			this.log('error', `Cannot send ${command}: controller ip address or host is not configured`)
+			return
+		}
 		return this.queue.push(async () => {
 			this.sequence = (this.sequence + 1) % 10000
-			let url = `http://${this.config.controller}/cgi-bin/joyctrl.cgi?f=${command}`
+			let url = `http://${controller}/cgi-bin/joyctrl.cgi?f=${command}`
 			argMap.forEach((value, key) => {
 				url = url + `&${key}=${value}`
 			})
@@ -240,7 +261,17 @@ class PTZSuperJoyInstance extends InstanceBase {
 				callback.function(json, callback.data)
 			} catch (error) {
 				// this.log('debug', `Catch: sequence ${this.sequence}`)
-				handleSuperJoyCommandError(error)
+				// sendCommand's promise is never awaited, so rethrowing here would cause an unhandled rejection and kill the module process
+				if (error instanceof SuperJoyCommandError) {
+					handleSuperJoyCommandError(error)
+				} else {
+					handleSuperJoyCommandError(
+						new SuperJoyCommandError(`Request failed: sequence ${this.sequence} ${error.message}`, {
+							url: url,
+							superJoyInstance: this,
+						}),
+					)
+				}
 			} finally {
 				// this.log('debug', `Finally: sequence ${this.sequence}`)
 			}
@@ -265,8 +296,9 @@ class PTZSuperJoyInstance extends InstanceBase {
 	 * @async
 	 */
 	async pollStatus() {
+		const generation = ++this.pollGeneration
 		this.polling = true
-		while (this.polling) {
+		while (this.polling && generation === this.pollGeneration) {
 			try {
 				if (this.queue.length() == 0) {
 					let argMap = new Map([['action', 'status']])
